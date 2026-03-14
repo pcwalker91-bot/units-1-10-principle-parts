@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Units 1-10 principle parts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:#f6f6f6;margin:0;padding:20px;}
+    .container{max-width:900px;margin:auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;}
+    h1{margin-top:0;}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+    .part{font-size:1.6rem;margin:6px 0;}
+    .small{color:#555;font-size:0.9rem;}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Units 1-10 principle parts</h1>
+  <div class="controls">
+    <label>Unit:
+      <select id="unitFilter">
+        <option value="">All</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+    </label>
+    <button id="next">Reveal next</button>
+    <button id="skip">Skip</button>
+    <button id="shuffle">Shuffle</button>
+  </div>
+  <div id="progress" class="small"></div>
+  <div id="present" class="part"></div>
+  <div id="reveals" class="part"></div>
+  <div id="meaning" class="part"></div>
+  <div class="small">Click “Reveal next” to show each principal part in order, ending with the verb’s meaning.</div>
+</div>
+<script>
+const verbs=[
+{u:1,p:"εἰμί",f:"ἔσομαι",a:"—",pa:"—",pm:"—",ap:"—",m:"to be"},
+{u:1,p:"λύω",f:"λύσω",a:"ἔλυσα",pa:"λέλυκα",pm:"λέλυμαι",ap:"ἐλύθην",m:"loosen, release"},
+{u:1,p:"γράφω",f:"γράψω",a:"ἔγραψα",pa:"γέγραφα",pm:"γέγραμμαι",ap:"ἐγράφην",m:"write"},
+{u:2,p:"πέμπω",f:"πέμψω",a:"ἔπεμψα",pa:"πέπομφα",pm:"πέπεμμαι",ap:"ἐπέμφθην",m:"send"},
+{u:2,p:"βλέπω",f:"βλέψομαι",a:"ἔβλεψα",pa:"βέβλεφα",pm:"βέβλεμμαι",ap:"ἐβλέφθην",m:"see"},
+{u:2,p:"λαμβάνω",f:"λήψομαι",a:"ἔλαβον",pa:"εἴληφα",pm:"εἴλημμαι",ap:"ἐλήμφθην",m:"take"},
+{u:3,p:"ἄγω",f:"ἄξω",a:"ἤγαγον",pa:"ἦχα",pm:"ἦγμαι",ap:"ἤχθην",m:"lead"},
+{u:3,p:"λέγω",f:"ἐρῶ",a:"εἶπον",pa:"εἴρηκα",pm:"εἴρημαι",ap:"ἐρρήθην",m:"say, speak"},
+{u:3,p:"ἔχω",f:"ἕξω / σχήσω",a:"ἔσχον",pa:"ἔσχηκα",pm:"—",ap:"—",m:"have"},
+{u:4,p:"βάλλω",f:"βαλῶ",a:"ἔβαλον",pa:"βέβληκα",pm:"βέβλημαι",ap:"ἐβλήθην",m:"throw"},
+{u:4,p:"φεύγω",f:"φεύξομαι",a:"ἔφυγον",pa:"πέφευγα",pm:"—",ap:"—",m:"flee"},
+{u:5,p:"πείθω",f:"πείσω",a:"ἔπεισα",pa:"πέπεικα",pm:"πέπεισμαι",ap:"ἐπείσθην",m:"persuade"},
+{u:5,p:"ἀκούω",f:"ἀκούσομαι",a:"ἤκουσα",pa:"ἀκήκοα",pm:"ἀκήκοαμαι",ap:"ἠκούσθην",m:"hear"},
+{u:6,p:"ζητέω",f:"ζητήσω",a:"ἐζήτησα",pa:"ἐζήτηκα",pm:"ἐζήτημαι",ap:"ἐζητήθην",m:"seek"},
+{u:6,p:"ποιέω",f:"ποιήσω",a:"ἐποίησα",pa:"πεποίηκα",pm:"πεποίημαι",ap:"ἐποιήθην",m:"do, make"},
+{u:6,p:"δηλόω",f:"δηλώσω",a:"ἐδήλωσα",pa:"δεδήλωκα",pm:"δεδήλωμαι",ap:"ἐδηλώθην",m:"show"},
+{u:7,p:"τιμάω",f:"τιμήσω",a:"ἐτίμησα",pa:"τετίμηκα",pm:"τετίμημαι",ap:"ἐτιμήθην",m:"honor"},
+{u:7,p:"καλέω",f:"καλέσω",a:"ἐκάλεσα",pa:"κέκληκα",pm:"κέκλημαι",ap:"ἐκλήθην",m:"call"},
+{u:7,p:"μένω",f:"μενῶ",a:"ἔμεινα",pa:"μεμένηκα",pm:"—",ap:"—",m:"remain, stay"},
+{u:8,p:"εὑρίσκω",f:"εὑρήσω",a:"ηὗρον",pa:"ηὕρηκα",pm:"ηὕρημαι",ap:"εὑρέθην",m:"find"},
+{u:8,p:"ἔρχομαι",f:"εἶμι",a:"ἦλθον",pa:"ἐλήλυθα",pm:"—",ap:"—",m:"come, go"},
+{u:9,p:"γίγνομαι",f:"γενήσομαι",a:"ἐγενόμην",pa:"γέγονα",pm:"—",ap:"—",m:"become"},
+{u:9,p:"πάσχω",f:"πείσομαι",a:"ἔπαθον",pa:"πέπονθα",pm:"—",ap:"—",m:"suffer"},
+{u:10,p:"φέρω",f:"οἴσω",a:"ἤνεγκον",pa:"ἐνήνοχα",pm:"ἐνήνεγμαι",ap:"ἠνέχθην",m:"bring, bear"}
+];
+const partKeys=["f","a","pa","pm","ap","m"];
+const partLabels=["Future","Aorist","Perfect active","Perfect mid/pass.","Aorist passive","Meaning"];
+let currentList=[];
+let idx=0;
+let stage=0;
+const presentEl=document.getElementById("present");
+const revealsEl=document.getElementById("reveals");
+const meaningEl=document.getElementById("meaning");
+const progressEl=document.getElementById("progress");
+function shuffle(arr){
+for(let i=arr.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[arr[i],arr[j]]=[arr[j],arr[i]];
+}
+}
+function buildList(){
+const unit=document.getElementById("unitFilter").value;
+currentList=verbs.filter(v=>!unit||String(v.u)===unit);
+shuffle(currentList);
+idx=0;stage=0;render();
+}
+function render(){
+if(currentList.length===0){
+presentEl.textContent="No verbs for that unit.";
+revealsEl.textContent="";
+meaningEl.textContent="";
+progressEl.textContent="";
+return;
+}
+const v=currentList[idx];
+progressEl.textContent=`Verb ${idx+1} of ${currentList.length} (Unit ${v.u})`;
+presentEl.textContent=v.p;
+revealsEl.textContent="";
+meaningEl.textContent="";
+}
+function revealNext(){
+if(currentList.length===0)return;
+if(stage<5){
+const v=currentList[idx];
+const label=partLabels[stage];
+const val=v[partKeys[stage]];
+revealsEl.textContent+=`${label}: ${val} `;
+stage++;
+}else{
+const v=currentList[idx];
+meaningEl.textContent=`Meaning: ${v.m}`;
+idx++;
+if(idx>=currentList.length){idx=0;}
+stage=0;
+setTimeout(render,400);
+}
+}
+document.getElementById("next").onclick=revealNext;
+document.getElementById("skip").onclick=()=>{idx=(idx+1)%currentList.length;stage=0;render();};
+document.getElementById("shuffle").onclick=buildList;
+document.getElementById("unitFilter").onchange=buildList;
+buildList();
+</script>
+</body>
+</html>
