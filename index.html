@@ -1,47 +1,11 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Units 1-10 principle parts</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:#f6f6f6;margin:0;padding:20px;}
-    .container{max-width:900px;margin:auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;}
-    h1{margin-top:0;}
-    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
-    .part{font-size:1.6rem;margin:6px 0;}
-    .small{color:#555;font-size:0.9rem;}
-  </style>
-</head>
-<body>
-<div class="container">
-  <h1>Units 1-10 principle parts</h1>
-  <div class="controls">
-    <label>Unit:
-      <select id="unitFilter">
-        <option value="">All</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-      </select>
-    </label>
-    <button id="next">Reveal next</button>
-    <button id="skip">Skip</button>
-    <button id="shuffle">Shuffle</button>
-  </div>
-  <div id="progress" class="small"></div>
-  <div id="present" class="part"></div>
-  <div id="reveals" class="part"></div>
-  <div id="meaning" class="part"></div>
-  <div class="small">Click “Reveal next” to show each principal part in order, ending with the verb’s meaning.</div>
+<table id="partsTable" style="width:100%; border-collapse:collapse;">
+  <tr id="labels"></tr>
+  <tr id="values"></tr>
+</table>
+<div class="small">
+  Click “Reveal next” to show each principal part in order, ending with the verb’s meaning. Click again after the meaning to advance to the next verb.
 </div>
+
 <script>
 const verbs=[
 {u:1,p:"λύω",f:"λύσω",a:"ἔλυσα",pa:"λέλυκα",pm:"λέλυμαι",ap:"ἐλύθην",m:"loosen, release"},
@@ -69,63 +33,90 @@ const verbs=[
 {u:9,p:"πάσχω",f:"πείσομαι",a:"ἔπαθον",pa:"πέπονθα",pm:"—",ap:"—",m:"suffer"},
 {u:10,p:"φέρω",f:"οἴσω",a:"ἤνεγκον",pa:"ἐνήνοχα",pm:"ἐνήνεγμαι",ap:"ἠνέχθην",m:"bring, bear"}
 ];
-const partKeys=["f","a","pa","pm","ap","m"];
-const partLabels=["Future","Aorist","Perfect active","Perfect mid/pass.","Aorist passive","Meaning"];
+
+const labelsAll = ["Present","Future","Aorist","Perfect active","Perfect mid/pass.","Aorist passive","Meaning"];
+const keysAll   = ["p","f","a","pa","pm","ap","m"];
+
 let currentList=[];
 let idx=0;
-let stage=0;
-const presentEl=document.getElementById("present");
-const revealsEl=document.getElementById("reveals");
-const meaningEl=document.getElementById("meaning");
+// stage = next column index to reveal (1..7); stage = 7 means meaning shown; stage = 8 means ready to advance
+let stage=1;
+
+const labelsRow=document.getElementById("labels");
+const valuesRow=document.getElementById("values");
 const progressEl=document.getElementById("progress");
+
 function shuffle(arr){
-for(let i=arr.length-1;i>0;i--){
-const j=Math.floor(Math.random()*(i+1));
-[arr[i],arr[j]]=[arr[j],arr[i]];
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
 }
+
+function renderTableSkeleton(){
+  labelsRow.innerHTML="";
+  valuesRow.innerHTML="";
+  labelsAll.forEach(lbl=>{
+    const th=document.createElement("th");
+    th.textContent=lbl;
+    labelsRow.appendChild(th);
+    const td=document.createElement("td");
+    td.textContent="";
+    valuesRow.appendChild(td);
+  });
 }
+
 function buildList(){
-const unit=document.getElementById("unitFilter").value;
-currentList=verbs.filter(v=>!unit||String(v.u)===unit);
-shuffle(currentList);
-idx=0;stage=0;render();
+  const unit=document.getElementById("unitFilter").value;
+  currentList=verbs.filter(v=>!unit||String(v.u)===unit);
+  shuffle(currentList);
+  idx=0; stage=1;
+  renderTableSkeleton();
+  renderVerb();
 }
-function render(){
-if(currentList.length===0){
-presentEl.textContent="No verbs for that unit.";
-revealsEl.textContent="";
-meaningEl.textContent="";
-progressEl.textContent="";
-return;
+
+function renderVerb(){
+  if(currentList.length===0){
+    progressEl.textContent="";
+    renderTableSkeleton();
+    valuesRow.firstChild.textContent="No verbs for that unit.";
+    return;
+  }
+  const v=currentList[idx];
+  progressEl.textContent=`Verb ${idx+1} of ${currentList.length} (Unit ${v.u})`;
+  // clear values
+  Array.from(valuesRow.children).forEach(td=>td.textContent="");
+  // always show present immediately
+  valuesRow.children[0].textContent=v.p;
 }
-const v=currentList[idx];
-progressEl.textContent=`Verb ${idx+1} of ${currentList.length} (Unit ${v.u})`;
-presentEl.textContent=v.p;
-revealsEl.textContent="";
-meaningEl.textContent="";
-}
+
 function revealNext(){
-if(currentList.length===0)return;
-if(stage<5){
-const v=currentList[idx];
-const label=partLabels[stage];
-const val=v[partKeys[stage]];
-revealsEl.textContent+=`${label}: ${val} `;
-stage++;
-}else{
-const v=currentList[idx];
-meaningEl.textContent=`Meaning: ${v.m}`;
-idx++;
-if(idx>=currentList.length){idx=0;}
-stage=0;
-setTimeout(render,400);
+  if(currentList.length===0) return;
+  const v=currentList[idx];
+
+  // Stage 1..7 reveal each column after present (stage 1 reveals Future column)
+  if(stage<=keysAll.length-1){
+    const key=keysAll[stage];
+    valuesRow.children[stage].textContent = key==="m" ? v.m : v[key];
+    stage++;
+
+    // After revealing meaning (stage becomes 7->8), do NOT auto-advance
+    if(stage>keysAll.length-1){
+      stage = keysAll.length + 1; // meaning shown; waiting for another click
+    }
+    return;
+  }
+
+  // stage == 8 → advance to next verb
+  idx = (idx + 1) % currentList.length;
+  stage = 1;
+  renderVerb();
 }
-}
+
 document.getElementById("next").onclick=revealNext;
-document.getElementById("skip").onclick=()=>{idx=(idx+1)%currentList.length;stage=0;render();};
+document.getElementById("skip").onclick=() => { idx=(idx+1)%currentList.length; stage=1; renderVerb(); };
 document.getElementById("shuffle").onclick=buildList;
 document.getElementById("unitFilter").onchange=buildList;
+
 buildList();
 </script>
-</body>
-</html>
